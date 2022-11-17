@@ -1,24 +1,32 @@
 const Sequelize = require("sequelize");
-const db = new Sequelize("postgres://localhost:5432/wikistack", {logging: false});
+const db = new Sequelize("postgres://localhost:5432/wikistack", {
+  logging: false,
+});
+const generateSlug = (title) => {
+  return title.replace(/\s+/g, "_").replace(/\W/g, "");
+};
 
 const Page = db.define("page", {
   title: {
     type: Sequelize.STRING,
     allowNull: false,
-    defaultValue: 'title'
+    defaultValue: "title",
   },
   slug: {
     type: Sequelize.STRING,
     allowNull: false,
-    defaultValue: 'slug'
   },
   content: {
     type: Sequelize.STRING,
     allowNull: false,
-    defaultValue: 'content'
+    defaultValue: "content",
   },
 
   status: Sequelize.ENUM("open", "closed"),
+});
+Page.beforeValidate(async (page, options) => {
+  const generatedSlug = await generateSlug(page.title);
+  page.slug = generatedSlug;
 });
 
 const User = db.define("user", {
@@ -29,8 +37,8 @@ const User = db.define("user", {
   email: {
     type: Sequelize.STRING,
     allowNull: false,
-    validate: {isEmail: true}
-  }
+    validate: { isEmail: true },
+  },
 });
 
 module.exports = { db, User, Page };
