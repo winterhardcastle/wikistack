@@ -1,21 +1,37 @@
+const wikiPage = require('./routes/wiki')
+const usersPage = require('./routes/users')
 const express = require("express");
 const morgan = require("morgan");
 const pages = require("./views/main.js");
 const app = express();
-const db = require("./models/index.js");
+
+const {db, Page, Users} = require("./models/index.js");
 
 app.use(morgan("tiny"));
 app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
+app.use("/wiki", wikiPage);
 
-db.db.authenticate().then(() => {
+db.authenticate().then(() => {
   console.log("Connected to database");
 });
 
-app.get("/", (req, res) => {
-  res.send(pages(""));
+app.get("/", (req, res, next) => {
+  try {
+    res.redirect('/wiki');
+  } catch (error) { next(error) }
 });
 
-app.listen("1337", () => {
-  console.log("Server running.");
-});
+
+const dbSync = async () => {
+  await db.sync();
+  app.listen("1337", () => {
+    console.log("Server running.");
+  });
+}
+dbSync();
+
+// app.listen("1337", () => {
+//   console.log("Server running.");
+// });
+
